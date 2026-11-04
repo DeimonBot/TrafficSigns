@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+
+# Variables de entorno y secretos
+.env
+.env.*
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Modelos y caché de Hugging Face
+.cache/
+cache/
+models/
+*.safetensors
+*.bin
+
+# IDE
+.vscode/
+.idea/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Resultados temporales
+*.log
