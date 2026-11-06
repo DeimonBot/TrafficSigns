@@ -1,7 +1,7 @@
 # RoadVision — Diseño (versión sin entrenamiento)
 
 - **Fecha:** 2026-11-06
-- **Estado:** borrador para aprobación del equipo
+- **Estado:** aprobado por DidierParody el 2026-11-06; la sección 10 sigue abierta
 - **Repo:** https://github.com/DeimonBot/TrafficSigns
 
 ---
@@ -65,7 +65,7 @@ El contexto es Colombia: las fotos serán de calles colombianas, cuya señalizac
 - Arquitectura en etapas: detector genérico + clasificador GTSRB + respaldo CLIP.
 - Modelos concretos (sección 5.2).
 - Catálogo de señales en un archivo YAML, con tabla de equivalencias GTSRB → Colombia.
-- Conjunto de prueba con etiquetas por foto (no por caja).
+- Evaluación en tres niveles (sección 6): GTSRB para verificar el clasificador, el dataset ecuatoriano ESPE para ajustar, y fotos colombianas (etiquetadas por foto, sin cajas) para el resultado final.
 - Panel de rendimiento opcional dentro de la interfaz, además de la terminal.
 - Script de benchmark y comando de línea (`cli`) además de la interfaz.
 - Verificación del número en los límites de velocidad con CLIP (5.3).
@@ -212,19 +212,21 @@ TrafficSigns/
 │  └─ catalogo_senales.yaml
 ├─ samples/                      # fotos de prueba propias (pocas, livianas)
 ├─ eval/
-│  └─ etiquetas.csv              # conjunto de prueba (sección 6)
+│  ├─ etiquetas.csv              # nivel C: fotos colombianas (sección 6)
+│  └─ mapeo_espe.yaml            # nivel B: clases ESPE → catálogo
 ├─ scripts/
 │  ├─ download_models.py         # descarga los 3 modelos a la caché local
 │  ├─ check_gpu.py               # verifica CUDA, GPU y nvidia-ml-py
 │  ├─ benchmark.py
-│  └─ evaluate.py                # mide aciertos contra eval/etiquetas.csv
+│  └─ evaluate.py                # evaluación niveles A, B y C (sección 6)
 ├─ tests/
+├─ datasets/                     # GTSRB, ESPE, fotos de prueba (ignorado por git)
 ├─ logs/                         # ignorado por git
 ├─ requirements.txt              # todo excepto torch
 └─ README.md                     # instalación paso a paso (incluye torch con CUDA)
 ```
 
-`.gitignore` debe añadir `*.pt` y `logs/`.
+`.gitignore` debe añadir `*.pt`, `logs/` y `datasets/`.
 
 ### 5.8 Dependencias
 
@@ -232,14 +234,37 @@ TrafficSigns/
 
 ## 6. Evaluación (sin entrenar, pero midiendo)
 
-Sin entrenamiento, los umbrales y la elección de modelos se deciden con datos propios:
+Sin entrenamiento, los umbrales y la elección de modelos se deciden midiendo. **No existe un dataset público grande de señales colombianas** (revisado el 2026-11-06 en Kaggle, Roboflow Universe, Mapillary y repositorios académicos), así que la evaluación usa tres niveles de datos.
 
-- **Conjunto de prueba:** 30–50 fotos de calles colombianas tomadas por el equipo, variadas (día/noche, cerca/lejos, distintas zonas). Se guardan fuera del repo si pesan mucho; en el repo, solo unas pocas en `samples/`.
-- **Etiquetado simple:** `eval/etiquetas.csv` con una fila por foto y la lista de ids de catálogo que aparecen (no se dibujan cajas).
-- **`scripts/evaluate.py`** reporta por foto y en total: señales esperadas encontradas (recall), señales reportadas que no estaban (falsos positivos), aproximadas correctas/incorrectas, no reconocidas.
-- Con esto se ajustan los umbrales de 5.3 y se decide si vale la pena CLIP *large* o comparar con el detector YOLO.
-- **Criterio de éxito y orden de ajuste:**
-  1. Primero, subir umbrales hasta que **ninguna** señal salga como "reconocida" con un nombre equivocado en el conjunto de prueba (como máximo una, explicada en el informe).
+### 6.1 Fuentes de datos
+
+| Nivel | Fuente | Qué es | Licencia | Para qué |
+|---|---|---|---|---|
+| **A** | Test oficial de GTSRB (`torchvision.datasets.GTSRB(split="test", download=True)`) | 12.630 recortes de señales alemanas, una clase por imagen. No requiere cuenta. | Términos del benchmark GTSRB | Verificar que el clasificador da en nuestra máquina la exactitud publicada (~98 %) y medir su velocidad. No dice nada de Colombia. |
+| **B** | Roboflow Universe — ["Señales de transito" (Universidad de las Fuerzas Armadas ESPE, Ecuador)](https://universe.roboflow.com/universidad-de-las-fuerzas-armadas-espe-vq89f/senales-de-transito-8f0y5) | 8.389 fotos de calle tomadas con celular, 127 clases con cajas. Señalización andina muy parecida a la colombiana (Pare, Ceda el paso, No entre, No adelantar, Resalto/Reductor, Niños, Peatones, curvas y preventivas en rombo amarillo). Requiere cuenta gratuita de Roboflow para exportar (COCO o YOLO). | CC BY 4.0 | **Ajustar** umbrales y consultas, y medir el detector con cajas reales. |
+| **C** | 30–50 fotos de calles colombianas: tomadas por el equipo (preferido) o escogidas en Mapillary | Variadas: día/noche, cerca/lejos, distintas zonas. | Propias; Mapillary CC BY-SA 4.0 (confirmar en sus términos) | **Resultado final** del informe. |
+
+Complemento opcional para B: ["Yolo señales de tráfico"](https://universe.roboflow.com/yolo-2ugit/yolo-senales-de-trafico) (129 imágenes, Pare/Ceda/Resalto, CC BY 4.0, país no indicado).
+
+Reglas de uso:
+- **Nivel B:** se toma un subconjunto de ~150–200 fotos **solo de clases con equivalente colombiano**, y una sola foto por ráfaga (el dataset tiene muchas ráfagas `TIMEBURST` casi idénticas). La equivalencia de clases ESPE → catálogo vive en `eval/mapeo_espe.yaml`; las clases sin equivalente se excluyen.
+- **Nivel C:** etiquetado simple en `eval/etiquetas.csv`, una fila por foto con la lista de ids de catálogo que aparecen (sin cajas).
+- **Los umbrales se ajustan en B y el resultado se reporta en C.** Si después de mirar C se retocan umbrales, el informe lo dice.
+- Los datasets se guardan en `datasets/` (fuera de git). En el repo solo van unas pocas fotos livianas en `samples/`.
+- El README incluye una sección "Créditos de datos" (CC BY y CC BY-SA exigen atribución).
+
+### 6.2 Qué mide `scripts/evaluate.py`
+
+- **`--nivel a`:** exactitud del clasificador por clase y global, tiempo por lote.
+- **`--nivel b`:** recall del detector (cajas con IoU ≥ 0.5 contra las de ESPE), falsos positivos por foto, y sobre las cajas emparejadas: reconocidas correctas, reconocidas **incorrectas**, aproximadas correctas/incorrectas, solo categoría, no reconocidas.
+- **`--nivel c`:** por foto y en total: señales esperadas encontradas, señales reportadas que no estaban, aproximadas correctas/incorrectas, no reconocidas.
+- Todo se reporta separado por categoría (reglamentarias vs. preventivas).
+
+Con esto se ajustan los umbrales de 5.3 y se decide si vale la pena CLIP *large* o comparar con el detector YOLO.
+
+### 6.3 Criterio de éxito y orden de ajuste
+
+  1. Primero, subir umbrales hasta que **ninguna** señal salga como "reconocida" con un nombre equivocado en el nivel B, y comprobar que se mantiene en el nivel C (como máximo una, explicada en el informe).
   2. Después, con esa restricción, maximizar cuántas señales esperadas se encuentran.
   3. Las "aproximadas" equivocadas se toleran porque se muestran como tales, pero su tasa se reporta.
   - No hay meta numérica de recall; se reporta por categoría (reglamentarias vs. preventivas).
@@ -250,11 +275,11 @@ Sin entrenamiento, los umbrales y la elección de modelos se deciden con datos p
 | Hito | Contenido | Depende de |
 |---|---|---|
 | H0 Base | Estructura del repo, `.gitignore`, requirements, README de instalación, `check_gpu.py`, `download_models.py`, y una **lista de verificación para el PC NVIDIA** (instalar, correr `check_gpu.py`, correr `benchmark.py` en fp16 y fp32, comparar resultados). Instalación verificada en el PC NVIDIA. **Empezar a tomar las fotos de prueba.** | — |
-| H1 Núcleo | **Primero, fijar los contratos** (`Resultado`, interfaces `Detector`/`Clasificador`/`Respaldo`). Luego `imaging`, `detector`, `classifier`, `pipeline` básico (sin respaldo), `cli` que imprime las detecciones. | H0 |
+| H1 Núcleo | **Primero, fijar los contratos** (`Resultado`, interfaces `Detector`/`Clasificador`/`Respaldo`). Luego `imaging`, `detector`, `classifier`, `pipeline` básico (sin respaldo), `cli` que imprime las detecciones. Verificar el clasificador con el nivel A (GTSRB). | H0 |
 | H2 Catálogo y decisión | YAML con equivalencias, `catalog`, lógica 5.3 completa con respaldo CLIP, prueba de cobertura de las 43 etiquetas. | H1 |
 | H3 Interfaz | `app.py` completo según 5.5. | H2 |
 | H4 Métricas | `metrics` integrado en pipeline, reporte de arranque, CSV, `benchmark.py`. | H1 (en paralelo a H2/H3) |
-| H5 Evaluación | `etiquetas.csv`, `evaluate.py`, ajuste de umbrales, tabla de resultados para el informe. | H2 + fotos |
+| H5 Evaluación | `evaluate.py` (niveles A, B, C), `mapeo_espe.yaml` y subconjunto ESPE, ajuste de umbrales en B, `etiquetas.csv` y resultado final en C, tabla de resultados para el informe. | H2 + datos (B no depende de salir a tomar fotos; C sí) |
 
 Pruebas automáticas mínimas: cobertura del catálogo, pipeline sobre una imagen de `samples/` en CPU, `metrics` funcionando sin GPU, normalización EXIF/RGB.
 
@@ -269,11 +294,13 @@ Pruebas automáticas mínimas: cobertura del catálogo, pipeline sobre una image
 | Instalación de PyTorch con CUDA en Windows. | README paso a paso + `check_gpu.py`. |
 | Primera ejecución sin internet. | `download_models.py` se corre durante la instalación. |
 | Falsos positivos del detector (avisos comerciales, vallas). | Umbral de detección + el clasificador/respaldo los deja como "no reconocida" (ocultables con la casilla). |
+| Las señales ecuatorianas (nivel B) no son idénticas a las colombianas. | Solo se usan clases con equivalente en `mapeo_espe.yaml`; el número que se reporta como resultado sale del nivel C. |
+| No hay un dataset colombiano público. | Nivel C con fotos propias o de Mapillary; el trabajo de modelos no espera por ellas (arranca con A y B). |
 
 ## 9. Lo que queda al constructor
 
 - Versiones exactas de librerías.
-- Consultas de texto exactas para OWLv2 y descripciones exactas para CLIP (iterando con el conjunto de prueba).
+- Consultas de texto exactas para OWLv2 y descripciones exactas para CLIP (iterando con el nivel B).
 - Supresión de duplicados entre consultas del detector.
 - Estilo visual de la interfaz dentro de lo descrito en 5.5.
 - Formato exacto de la tabla de terminal y columnas del CSV (mínimo las de 5.6).
@@ -282,7 +309,7 @@ Pruebas automáticas mínimas: cobertura del catálogo, pipeline sobre una image
 ## 10. Abierto (lo decide el equipo)
 
 - Fecha de entrega (define si entran los extras: panel de rendimiento en la interfaz, CLIP large, comparación con YOLO).
-- Cuántos integrantes son y quién toma qué hito.
+- Cuántos integrantes son y quién toma qué hito. Ya definido: **modelos (H1–H2) → DidierParody**.
 - Modelo y VRAM de la GPU del PC de ejecución (afecta fp16 por defecto y si cabe CLIP large; la configuración permite cambiarlo).
 
 ## 11. Evolución futura (fuera de este diseño)
