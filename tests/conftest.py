@@ -14,6 +14,7 @@ from roadvision.device import Dispositivo, elegir_dispositivo
 if TYPE_CHECKING:
     from roadvision.classifier import ClasificadorGtsrb
     from roadvision.detector import DetectorOwlv2
+    from roadvision.fallback import RespaldoClip
 
 
 @pytest.fixture(scope="session")
@@ -34,6 +35,13 @@ def detector(dispositivo: Dispositivo) -> DetectorOwlv2:
 
     config = Config()
     return DetectorOwlv2(config.modelo_detector, config.consultas_detector, dispositivo)
+
+
+@pytest.fixture(scope="session")
+def respaldo(dispositivo: Dispositivo) -> RespaldoClip:
+    from roadvision.fallback import RespaldoClip
+
+    return RespaldoClip(Config().modelo_respaldo, dispositivo)
 
 
 @pytest.fixture(scope="session")
