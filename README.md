@@ -88,6 +88,9 @@ imágenes por segundo.
 
 ## Lista de verificación en el PC NVIDIA
 
+La guía paso a paso (pensada para que la ejecute Claude en ese PC) está en
+[docs/guia-pc-nvidia.md](docs/guia-pc-nvidia.md). Resumen:
+
 1. `python scripts/check_gpu.py` termina con código 0.
 2. `pytest -m modelos` pasa usando CUDA (dispositivo `auto` con GPU disponible).
 3. `python scripts/evaluate.py --nivel a --dispositivo cuda` sobre el test completo da
