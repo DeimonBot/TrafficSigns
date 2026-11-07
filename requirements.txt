@@ -4,3 +4,4 @@ transformers==5.22.2
 pillow==13.0.0
 pyyaml==6.0.3
 pytest==9.2.0
+streamlit==1.67.0
