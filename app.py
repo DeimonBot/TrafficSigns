@@ -1,10 +1,20 @@
 import dataclasses
+import os
 
 import streamlit as st
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 from roadvision.config import Config
 from roadvision.contracts import Categoria, Estado
+from roadvision.dashboard.panel import render_panel
+from roadvision.metrics import (
+    analizar_medido,
+    calentar_medido,
+    escribir_csv,
+    registrar,
+    reporte_arranque,
+)
+from roadvision.capa_segura import construir_pipeline_seguro, modo_seguro_disponible
 from roadvision.pipeline import construir_pipeline
 
 st.set_page_config(page_title="RoadVision", page_icon="🚦", layout="wide")
@@ -24,11 +34,37 @@ ETIQUETA_ESTADO = {
 }
 
 
+def _construir():
+    """Un solo pipeline en el proceso (VRAM). ROADVISION_MODO: 'seguro' (por defecto si está
+    disponible) o 'clasico'. Devuelve (pipeline, modo, aviso)."""
+    modo = os.environ.get("ROADVISION_MODO", "seguro").strip().lower()
+    aviso = None
+    if modo != "clasico":
+        ok, motivo = modo_seguro_disponible()
+        if ok:
+            try:
+                return construir_pipeline_seguro(), "seguro", None
+            except Exception as exc:  # noqa: BLE001 - se cae al clásico con aviso
+                import gc
+
+                import torch
+
+                gc.collect()  # libera lo cargado a medias antes de cargar el clásico
+                torch.cuda.empty_cache()
+                aviso = f"No se pudo cargar el modo seguro ({exc}); se usa el modo clásico."
+        else:
+            aviso = f"Modo seguro no disponible ({motivo}); se usa el modo clásico."
+    return construir_pipeline(), "clasico", aviso
+
+
 @st.cache_resource(show_spinner="Cargando modelos (solo la primera vez)...")
 def cargar_pipeline():
-    pipeline = construir_pipeline()
-    calentamiento = pipeline.calentar()
-    return pipeline, calentamiento
+    pipeline, modo, aviso = _construir()
+    # Calentamiento medido y marcado: se imprime y se guarda aparte, fuera de estadísticas.
+    calentamiento = calentar_medido(pipeline)
+    reporte_arranque(pipeline, calentamiento)
+    escribir_csv(calentamiento)
+    return pipeline, calentamiento, modo, aviso
 
 
 def color_de(senal):
@@ -52,7 +88,9 @@ def dibujar_cajas(imagen, senales):
 
 
 # ---------- Cargar modelos ----------
-pipeline, calentamiento = cargar_pipeline()
+pipeline, calentamiento, modo, aviso_modo = cargar_pipeline()
+if aviso_modo:
+    st.warning(aviso_modo)
 base = pipeline.config.umbrales
 
 # ---------- Barra lateral ----------
@@ -65,6 +103,7 @@ with st.sidebar:
     st.divider()
     st.caption("Dispositivo en uso")
     st.write(pipeline.dispositivo.descripcion)
+    st.caption(f"Modo: {modo}")
 
 umbrales = dataclasses.replace(base, deteccion=umbral_det, gtsrb=umbral_cls)
 
@@ -76,8 +115,17 @@ archivo = st.file_uploader("Foto de la vía", type=["jpg", "jpeg", "png"])
 
 if archivo:
     imagen = ImageOps.exif_transpose(Image.open(archivo)).convert("RGB")
-    with st.spinner("Analizando..."):
-        resultado = pipeline.analizar(imagen, umbrales)
+    # Streamlit reejecuta el script con cada slider: se analiza (y se registra la métrica)
+    # una sola vez por foto y combinación de umbrales; si no cambian, se reutiliza.
+    clave_analisis = (archivo.file_id, umbral_det, umbral_cls)
+    previo = st.session_state.get("analisis")
+    if previo is not None and previo[0] == clave_analisis:
+        resultado = previo[1]
+    else:
+        with st.spinner("Analizando..."):
+            resultado, metricas = analizar_medido(pipeline, imagen, umbrales)
+        registrar(metricas)
+        st.session_state["analisis"] = (clave_analisis, resultado, metricas)
 
     senales = [
         s for s in resultado.senales
@@ -126,3 +174,4 @@ if archivo:
                 hide_index=True,
             )
             st.caption("El calentamiento inicial no entra en estos tiempos.")
+            render_panel(clave="app")

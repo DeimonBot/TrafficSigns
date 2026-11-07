@@ -1,0 +1,91 @@
+{
+ "version": "capa_segura_v1",
+ "config": "real",
+ "fecha": "2026-11-07",
+ "encoder": "google/siglip-base-patch16-224",
+ "embedding": "SiglipModel.get_image_features(pixel_values) en fp16 (cuda) o fp32; salida SIN normalizar (768); SiglipImageProcessor por defecto (RGB, resize 224x224 bicubico, rescale 1/255, mean=std=0.5); luego L2-normalizar y estandarizar (mu/sd en cabezas.npz)",
+ "clases_identidad": [
+  "animales_silvestres",
+  "ceda_el_paso",
+  "ciclistas",
+  "curva_derecha",
+  "no_estacionar",
+  "no_girar_derecha",
+  "no_girar_izquierda",
+  "otra_senal",
+  "pare",
+  "peatones",
+  "prohibido_adelantar",
+  "resalto",
+  "trabajos_via",
+  "velocidad_20",
+  "velocidad_30",
+  "velocidad_40",
+  "velocidad_80",
+  "zona_escolar"
+ ],
+ "umbrales": {
+  "tp_puerta": 0.95,
+  "ti_prob_identidad": 0.6,
+  "tm_margen": 0.6
+ },
+ "temperatura": 1.409720132281749,
+ "politica": "nombra = puerta>=tp & prob_top1>=ti & (prob_top1-prob_top2)>=tm & clase_top1 != 'otra_senal'",
+ "hiperparametros": {
+  "C_puerta": 0.1,
+  "C_identidad": 10.0,
+  "proporcion_sintetico_real": 0,
+  "penalizacion": "L2 (LBFGS, perdida media + ||W||^2/(2*C*n))"
+ },
+ "proporciones_ejemplos_identidad": {
+  "otra_senal": 50,
+  "pare": 11,
+  "velocidad_30": 7,
+  "zona_escolar": 4,
+  "trabajos_via": 4,
+  "velocidad_40": 4,
+  "prohibido_adelantar": 4,
+  "velocidad_20": 3,
+  "resalto": 2,
+  "animales_silvestres": 2,
+  "velocidad_80": 2,
+  "no_estacionar": 2,
+  "ciclistas": 1,
+  "ceda_el_paso": 1,
+  "no_girar_izquierda": 1,
+  "curva_derecha": 1,
+  "peatones": 1,
+  "no_girar_derecha": 1
+ },
+ "datos": {
+  "recortes_reales": 222,
+  "fotos": 65,
+  "catalogo": 51,
+  "otra_senal": 50,
+  "no_senal": 121,
+  "sinteticos": "pictogramas Colombia (23 clases) generados con exp2/B/gen.py, fondos de todas las fotos; espejo: no",
+  "real_volteado": false
+ },
+ "exclusiones": [
+  "omitida",
+  "Walsh_Colorado.jpg (EE.UU.)",
+  "I-70_West_near_exit_245_north_of_Evergreen_CO.jpg (EE.UU.)",
+  "9 recortes etiquetados curva_derecha/curva_izquierda que son tableros chevron -> reetiquetados otra_senal (se conserva solo Ladrillera_en_C_cuta__04.png como curva_derecha)"
+ ],
+ "metricas_cv_5pliegues_todos": {
+  "ok": 22,
+  "bad": 0,
+  "cat_real": 51,
+  "top1_cat": 29,
+  "nll_id": 1.275245221376938,
+  "C_puerta": 0.1,
+  "C_id": 10.0,
+  "ratio": 0,
+  "T": 1.409720132281749
+ },
+ "nota": "metricas_cv son OPTIMISTAS (umbrales elegidos sobre las mismas predicciones fuera de pliegue); la evaluacion honesta (umbrales internos) esta en exp3/informe.md",
+ "variantes_probadas": "4 configuraciones (real, +sint, +espejo [sint+real volteado], +espejo solo sint) x 2 politicas (con/sin margen) x 2 conjuntos (con/sin 3 sospechosos); proporciones {5,20} y C elegidos por CV interna; 1 semilla de sintesis",
+ "decision": "config 'real' (criterio: 0 errores en validacion externa, luego correctos)",
+ "sha256_cabezas": "eb5cd1b6e7abf45707f9855dd4ac03151f35a0b1d9890ec84370716fa61c3d26",
+ "revision_encoder": "7fd15f0689c79d79e38b1c2e2e2370a7bf2761ed"
+}
