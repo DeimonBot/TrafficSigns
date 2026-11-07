@@ -36,3 +36,12 @@ Thumbs.db
 *.pt
 logs/
 datasets/
+
+# Configuración local de Claude Code
+.claude/
+
+# Notas de trabajo locales (no se suben)
+RESUMEN_TRABAJO.md
+
+# Recortes de referencia de la capa segura (de fotos con licencia CC; solo locales)
+tests/fixtures/capa_segura/*.png
