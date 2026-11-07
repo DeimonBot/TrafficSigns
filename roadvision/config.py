@@ -1,8 +1,15 @@
 """Configuración del núcleo con los valores del diseño."""
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
+
+
+def ruta_datasets() -> Path:
+    """Carpeta de datasets: ROADVISION_DATASETS si está definida, si no `datasets/`."""
+    valor = os.environ.get("ROADVISION_DATASETS")
+    return Path(valor) if valor else RAIZ / "datasets"
 
 
 @dataclass(frozen=True)

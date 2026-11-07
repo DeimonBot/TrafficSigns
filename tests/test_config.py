@@ -18,3 +18,17 @@ def test_enums_en_minuscula():
     assert Estado.SOLO_CATEGORIA.value == "solo_categoria"
     assert Categoria.PREVENTIVA.value == "preventiva"
     assert Fuente.NINGUNA.value == "ninguna"
+
+
+def test_ruta_datasets_usa_variable_de_entorno(monkeypatch, tmp_path):
+    from roadvision.config import ruta_datasets
+
+    monkeypatch.setenv("ROADVISION_DATASETS", str(tmp_path))
+    assert ruta_datasets() == tmp_path
+
+
+def test_ruta_datasets_por_defecto(monkeypatch):
+    from roadvision.config import RAIZ, ruta_datasets
+
+    monkeypatch.delenv("ROADVISION_DATASETS", raising=False)
+    assert ruta_datasets() == RAIZ / "datasets"
