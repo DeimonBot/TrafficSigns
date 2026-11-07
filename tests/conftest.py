@@ -13,6 +13,7 @@ from roadvision.device import Dispositivo, elegir_dispositivo
 
 if TYPE_CHECKING:
     from roadvision.classifier import ClasificadorGtsrb
+    from roadvision.detector import DetectorOwlv2
 
 
 @pytest.fixture(scope="session")
@@ -25,6 +26,14 @@ def clasificador(dispositivo: Dispositivo) -> ClasificadorGtsrb:
     from roadvision.classifier import ClasificadorGtsrb
 
     return ClasificadorGtsrb(Config().modelo_clasificador, dispositivo)
+
+
+@pytest.fixture(scope="session")
+def detector(dispositivo: Dispositivo) -> DetectorOwlv2:
+    from roadvision.detector import DetectorOwlv2
+
+    config = Config()
+    return DetectorOwlv2(config.modelo_detector, config.consultas_detector, dispositivo)
 
 
 @pytest.fixture(scope="session")
