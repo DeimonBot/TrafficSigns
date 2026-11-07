@@ -1,0 +1,60 @@
+no_reconocida: "Señal no reconocida"
+clip_otro: "otro"
+categorias:
+  reglamentaria:
+    nombre: "Señal reglamentaria (tipo no identificado)"
+    significado: "Señal que indica una obligación o prohibición."
+    clip: "cat-reg"
+  preventiva:
+    nombre: "Señal preventiva (tipo no identificado)"
+    significado: "Señal que advierte de un peligro en la vía."
+    clip: "cat-prev"
+  informativa:
+    nombre: "Señal informativa (tipo no identificado)"
+    significado: "Señal que entrega información al conductor."
+    clip: "cat-inf"
+gtsrb_sin_equivalente:
+  - "Priority road"
+senales:
+  - id: pare
+    nombre: "PARE"
+    categoria: reglamentaria
+    significado: "Detenga completamente el vehículo."
+    gtsrb: ["Stop"]
+  - id: velocidad_30
+    nombre: "Velocidad máxima 30 km/h"
+    categoria: reglamentaria
+    significado: "No supere los 30 km/h."
+    gtsrb: ["Speed limit (30km/h)"]
+    clip: "v30"
+    velocidad_kmh: 30
+  - id: velocidad_50
+    nombre: "Velocidad máxima 50 km/h"
+    categoria: reglamentaria
+    significado: "No supere los 50 km/h."
+    gtsrb: ["Speed limit (50km/h)"]
+    clip: "v50"
+    velocidad_kmh: 50
+  - id: velocidad_60
+    nombre: "Velocidad máxima 60 km/h"
+    categoria: reglamentaria
+    significado: "No supere los 60 km/h."
+    gtsrb: ["Speed limit (60km/h)"]
+    clip: "v60"
+    velocidad_kmh: 60
+  - id: velocidad_40
+    nombre: "Velocidad máxima 40 km/h"
+    categoria: reglamentaria
+    significado: "No supere los 40 km/h."
+    clip: "v40"
+    velocidad_kmh: 40
+  - id: velocidad_no_verificada
+    nombre: "Velocidad máxima — valor no verificado"
+    categoria: reglamentaria
+    significado: "Hay un límite de velocidad, pero no se pudo leer su valor."
+  - id: resalto
+    nombre: "Resalto"
+    categoria: preventiva
+    significado: "Reduzca la velocidad: hay un resalto adelante."
+    gtsrb: ["Bumpy road"]
+    clip: "resalto"

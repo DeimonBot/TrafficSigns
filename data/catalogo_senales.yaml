@@ -1,0 +1,234 @@
+# Catálogo de señales de tránsito colombianas (Manual de Señalización Vial 2015).
+# Editable sin programar. Una etiqueta GTSRB solo se mapea si el significado es el mismo;
+# ante la duda va en gtsrb_sin_equivalente (el sistema recurre a CLIP).
+no_reconocida: "Señal no reconocida"
+clip_otro: "a photo of something that is not a traffic sign"
+categorias:
+  reglamentaria:
+    nombre: "Señal reglamentaria (tipo no identificado)"
+    significado: "Señal que indica una obligación, restricción o prohibición para el conductor."
+    clip: "a white circular road sign with red border"
+  preventiva:
+    nombre: "Señal preventiva (tipo no identificado)"
+    significado: "Señal que advierte de un peligro o una condición especial de la vía."
+    clip: "a yellow diamond-shaped warning road sign"
+  informativa:
+    nombre: "Señal informativa (tipo no identificado)"
+    significado: "Señal que entrega al conductor información de ubicación, destinos o servicios."
+    clip: "a blue rectangular informational road sign"
+# Clases GTSRB sin equivalente colombiano claro. Priority road es un rombo amarillo y se
+# confundiría con cualquier preventiva colombiana; las "End of ..." no existen en Colombia.
+gtsrb_sin_equivalente:
+  - "End of speed limit (80km/h)"
+  - "No passing veh over 3.5 tons"
+  - "Right-of-way at intersection"
+  - "Priority road"
+  - "No vehicles"
+  - "Veh > 3.5 tons prohibited"
+  - "General caution"
+  - "Bumpy road"
+  - "Beware of ice/snow"
+  - "End speed + passing limits"
+  - "Turn right ahead"
+  - "Turn left ahead"
+  - "Ahead only"
+  - "Go straight or right"
+  - "Go straight or left"
+  - "Keep right"
+  - "Keep left"
+  - "Roundabout mandatory"
+  - "End of no passing"
+  - "End no passing veh > 3.5 tons"
+senales:
+  - id: pare
+    nombre: "PARE"
+    categoria: reglamentaria
+    significado: "Detenga por completo el vehículo y avance solo cuando pueda hacerlo con seguridad, cediendo el paso a quien circula por la vía."
+    gtsrb: ["Stop"]
+    clip: "a red octagonal stop sign"
+  - id: ceda_el_paso
+    nombre: "CEDA EL PASO"
+    categoria: reglamentaria
+    significado: "Reduzca la velocidad y deje pasar a los vehículos de la otra vía antes de continuar."
+    gtsrb: ["Yield"]
+    clip: "a downward pointing triangular yield sign with red border"
+  - id: velocidad_20
+    nombre: "Velocidad máxima 20 km/h"
+    categoria: reglamentaria
+    significado: "No circule a más de 20 kilómetros por hora en este tramo."
+    gtsrb: ["Speed limit (20km/h)"]
+    clip: "a circular speed limit road sign showing the number 20"
+    velocidad_kmh: 20
+  - id: velocidad_30
+    nombre: "Velocidad máxima 30 km/h"
+    categoria: reglamentaria
+    significado: "No circule a más de 30 kilómetros por hora en este tramo."
+    gtsrb: ["Speed limit (30km/h)"]
+    clip: "a circular speed limit road sign showing the number 30"
+    velocidad_kmh: 30
+  - id: velocidad_40
+    nombre: "Velocidad máxima 40 km/h"
+    categoria: reglamentaria
+    significado: "No circule a más de 40 kilómetros por hora en este tramo."
+    clip: "a circular speed limit road sign showing the number 40"
+    velocidad_kmh: 40
+  - id: velocidad_50
+    nombre: "Velocidad máxima 50 km/h"
+    categoria: reglamentaria
+    significado: "No circule a más de 50 kilómetros por hora en este tramo."
+    gtsrb: ["Speed limit (50km/h)"]
+    clip: "a circular speed limit road sign showing the number 50"
+    velocidad_kmh: 50
+  - id: velocidad_60
+    nombre: "Velocidad máxima 60 km/h"
+    categoria: reglamentaria
+    significado: "No circule a más de 60 kilómetros por hora en este tramo."
+    gtsrb: ["Speed limit (60km/h)"]
+    clip: "a circular speed limit road sign showing the number 60"
+    velocidad_kmh: 60
+  - id: velocidad_70
+    nombre: "Velocidad máxima 70 km/h"
+    categoria: reglamentaria
+    significado: "No circule a más de 70 kilómetros por hora en este tramo."
+    gtsrb: ["Speed limit (70km/h)"]
+    clip: "a circular speed limit road sign showing the number 70"
+    velocidad_kmh: 70
+  - id: velocidad_80
+    nombre: "Velocidad máxima 80 km/h"
+    categoria: reglamentaria
+    significado: "No circule a más de 80 kilómetros por hora en este tramo."
+    gtsrb: ["Speed limit (80km/h)"]
+    clip: "a circular speed limit road sign showing the number 80"
+    velocidad_kmh: 80
+  - id: velocidad_90
+    nombre: "Velocidad máxima 90 km/h"
+    categoria: reglamentaria
+    significado: "No circule a más de 90 kilómetros por hora en este tramo."
+    clip: "a circular speed limit road sign showing the number 90"
+    velocidad_kmh: 90
+  - id: velocidad_100
+    nombre: "Velocidad máxima 100 km/h"
+    categoria: reglamentaria
+    significado: "No circule a más de 100 kilómetros por hora en este tramo."
+    gtsrb: ["Speed limit (100km/h)"]
+    clip: "a circular speed limit road sign showing the number 100"
+    velocidad_kmh: 100
+  - id: velocidad_120
+    nombre: "Velocidad máxima 120 km/h"
+    categoria: reglamentaria
+    significado: "No circule a más de 120 kilómetros por hora en este tramo."
+    gtsrb: ["Speed limit (120km/h)"]
+    clip: "a circular speed limit road sign showing the number 120"
+    velocidad_kmh: 120
+  - id: velocidad_no_verificada
+    nombre: "Velocidad máxima — valor no verificado"
+    categoria: reglamentaria
+    significado: "La señal indica un límite de velocidad, pero no fue posible confirmar el valor exacto."
+  - id: prohibido_adelantar
+    nombre: "Prohibido adelantar"
+    categoria: reglamentaria
+    significado: "No adelante a otros vehículos en este tramo."
+    gtsrb: ["No passing"]
+    clip: "a white circular road sign with red border showing two cars side by side, no overtaking"
+  - id: no_entre
+    nombre: "Prohibido el paso (no entre)"
+    categoria: reglamentaria
+    significado: "No ingrese a esta vía por este sentido."
+    gtsrb: ["No entry"]
+    clip: "a red circular road sign with a white horizontal bar, no entry"
+  - id: no_girar_izquierda
+    nombre: "Prohibido girar a la izquierda"
+    categoria: reglamentaria
+    significado: "No gire a la izquierda en este punto."
+    clip: "a white circular road sign with red border and red slash showing a left turn arrow, no left turn"
+  - id: no_girar_derecha
+    nombre: "Prohibido girar a la derecha"
+    categoria: reglamentaria
+    significado: "No gire a la derecha en este punto."
+    clip: "a white circular road sign with red border and red slash showing a right turn arrow, no right turn"
+  - id: no_estacionar
+    nombre: "Prohibido estacionar"
+    categoria: reglamentaria
+    significado: "No deje el vehículo estacionado en este lugar."
+    clip: "a circular road sign with red border and red diagonal slash on blue background, no parking"
+  - id: curva_izquierda
+    nombre: "Curva peligrosa a la izquierda"
+    categoria: preventiva
+    significado: "Reduzca la velocidad: la vía gira bruscamente hacia la izquierda."
+    gtsrb: ["Dangerous curve left"]
+    clip: "a yellow diamond road sign with a sharp left curve arrow"
+  - id: curva_derecha
+    nombre: "Curva peligrosa a la derecha"
+    categoria: preventiva
+    significado: "Reduzca la velocidad: la vía gira bruscamente hacia la derecha."
+    gtsrb: ["Dangerous curve right"]
+    clip: "a yellow diamond road sign with a sharp right curve arrow"
+  - id: curva_y_contracurva
+    nombre: "Curva y contracurva"
+    categoria: preventiva
+    significado: "Reduzca la velocidad: vienen dos curvas seguidas en sentidos contrarios."
+    gtsrb: ["Double curve"]
+    clip: "a yellow diamond road sign with an S-shaped winding road arrow"
+  - id: resalto
+    nombre: "Resalto o reductor de velocidad"
+    categoria: preventiva
+    significado: "Reduzca la velocidad: hay un resalto adelante."
+    clip: "a yellow diamond road sign with a speed bump symbol"
+  - id: via_resbaladiza
+    nombre: "Vía resbaladiza"
+    categoria: preventiva
+    significado: "Reduzca la velocidad y evite frenar bruscamente: el pavimento puede estar resbaloso."
+    gtsrb: ["Slippery road"]
+    clip: "a yellow diamond road sign with a car skidding symbol, slippery road"
+  - id: estrechamiento_derecha
+    nombre: "Estrechamiento de la vía por la derecha"
+    categoria: preventiva
+    significado: "Prepárese para circular con menos ancho: la calzada se reduce por el lado derecho."
+    gtsrb: ["Road narrows on the right"]
+    clip: "a yellow diamond road sign showing the road narrowing on the right side"
+  - id: trabajos_via
+    nombre: "Trabajos en la vía"
+    categoria: preventiva
+    significado: "Disminuya la velocidad y esté atento: hay obras o personal trabajando en la vía."
+    gtsrb: ["Road work"]
+    clip: "a yellow diamond road sign with a person digging, road work"
+  - id: semaforo
+    nombre: "Semáforo adelante"
+    categoria: preventiva
+    significado: "Prepárese para detenerse: hay un semáforo más adelante."
+    gtsrb: ["Traffic signals"]
+    clip: "a yellow diamond road sign with a traffic light symbol"
+  - id: peatones
+    nombre: "Cruce de peatones"
+    categoria: preventiva
+    significado: "Reduzca la velocidad y esté atento: es posible que haya peatones cruzando la vía."
+    gtsrb: ["Pedestrians"]
+    clip: "a yellow diamond road sign with a walking pedestrian symbol"
+  - id: zona_escolar
+    nombre: "Zona escolar"
+    categoria: preventiva
+    significado: "Conduzca con precaución: hay una escuela cerca y pueden cruzar niños."
+    gtsrb: ["Children crossing"]
+    clip: "a yellow diamond road sign with two children walking, school zone"
+  - id: ciclistas
+    nombre: "Cruce de ciclistas"
+    categoria: preventiva
+    significado: "Reduzca la velocidad: pueden cruzar ciclistas la vía."
+    gtsrb: ["Bicycles crossing"]
+    clip: "a yellow diamond road sign with a bicycle symbol"
+  - id: animales_silvestres
+    nombre: "Paso de animales silvestres"
+    categoria: preventiva
+    significado: "Conduzca con cuidado: pueden cruzar animales silvestres la vía."
+    gtsrb: ["Wild animals crossing"]
+    clip: "a yellow diamond road sign with a wild animal symbol"
+  - id: interseccion
+    nombre: "Intersección"
+    categoria: preventiva
+    significado: "Reduzca la velocidad y observe: se aproxima un cruce con otra vía."
+    clip: "a yellow diamond road sign with a crossroad intersection symbol"
+  - id: glorieta
+    nombre: "Glorieta adelante"
+    categoria: preventiva
+    significado: "Reduzca la velocidad: se aproxima una glorieta o rotonda."
+    clip: "a yellow diamond road sign with three arrows in a circle, roundabout ahead"
