@@ -54,8 +54,10 @@ def test_umbral_de_deteccion_por_llamada():
 
 
 def test_exif_rotado():
-    r = pipeline_falso([], []).analizar(jpeg_con_orientacion(400, 200, 6))
+    p = pipeline_falso([], [])
+    r = p.analizar(jpeg_con_orientacion(400, 200, 6))
     assert (r.ancho, r.alto) == (200, 400)
+    assert p.detector.ultima_imagen.size == (200, 400)
 
 
 def test_calentar_usa_cada_modelo():
@@ -63,3 +65,19 @@ def test_calentar_usa_cada_modelo():
     p = pipeline_falso([], [Prediccion("Stop", 0.9)], respaldo)
     assert set(p.calentar()) == {"deteccion", "clasificacion", "respaldo"}
     assert len(respaldo.llamadas) == 1
+
+
+def test_cada_senal_conserva_su_caja_y_decision():
+    # Anchos de caja distintos (100, 80, 60); el recorte mide caja + 2 x 10 %.
+    dets = [Deteccion((300, 50, 400, 150), 0.9), Deteccion((100, 50, 180, 130), 0.8),
+            Deteccion((500, 50, 560, 110), 0.7)]
+    preds = [Prediccion("Speed limit (50km/h)", 0.95), Prediccion("Stop", 0.97),
+             Prediccion("Priority road", 0.99)]
+    ancho_v50 = 120  # recorte de la caja de 100 px
+    respaldo = FakeRespaldo(puntajes={ancho_v50: {"v50": 5}}, por_defecto={"otro": 5})
+    p = pipeline_falso(dets, preds, respaldo)
+    r = p.analizar(Image.new("RGB", (640, 480)))
+    assert [s.numero for s in r.senales] == [1, 2, 3]
+    assert [s.caja[0] for s in r.senales] == [100, 300, 500]
+    assert [s.id_catalogo for s in r.senales] == ["pare", "velocidad_50", None]
+    assert [s.puntaje_deteccion for s in r.senales] == [0.8, 0.9, 0.7]

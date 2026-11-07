@@ -13,6 +13,8 @@ from roadvision.config import Config
 from roadvision.contracts import Resultado
 from roadvision.pipeline import ETAPAS, Pipeline, construir_pipeline
 
+CALENTAMIENTO = ("deteccion", "clasificacion", "respaldo")
+
 
 def _formatear(resultado: Resultado) -> str:
     lineas = []
@@ -57,13 +59,19 @@ def main(
     config = dataclasses.replace(
         Config(), dispositivo=args.dispositivo, fp16=not args.sin_fp16
     )
-    resultado = construir(config).analizar(imagen)
+    pipeline = construir(config)
+    calentamiento = pipeline.calentar()
+    resultado = pipeline.analizar(imagen)
 
     if hasattr(sys.stdout, "reconfigure"):
         try:
             sys.stdout.reconfigure(encoding="utf-8", errors="replace")
         except (OSError, ValueError):
             pass
+    print(
+        "Calentamiento (ms, no incluido en los tiempos): "
+        + " ".join(f"{e}={calentamiento.get(e, 0.0):.1f}" for e in CALENTAMIENTO)
+    )
     print(_formatear(resultado))
     return 0
 

@@ -24,6 +24,10 @@ class Fuente(str, Enum):
 
 
 class Estado(str, Enum):
+    """RECONOCIDA: GTSRB + catálogo. APROXIMADA: mejor coincidencia de CLIP, se muestra como
+    aproximada. SOLO_CATEGORIA: solo se conoce la categoría, o un límite de velocidad cuyo
+    valor no se pudo verificar. NO_RECONOCIDA: ninguna de las anteriores."""
+
     RECONOCIDA = "reconocida"
     APROXIMADA = "aproximada"
     SOLO_CATEGORIA = "solo_categoria"
@@ -61,7 +65,9 @@ class Senal:
 class Resultado:
     senales: list[Senal]
     conteo_por_nombre: dict[str, int]
+    # Claves: `Categoria.value`, más "sin_categoria" para señales sin categoría.
     conteo_por_categoria: dict[str, int]
+    # Siempre: total, preproceso, deteccion, clasificacion, respaldo.
     tiempos_ms: dict[str, float]
     ancho: int
     alto: int

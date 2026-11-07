@@ -63,6 +63,10 @@ Imprime, por cada señal, su número, nombre, categoría, estado, confianza y si
 además de un resumen y los tiempos por etapa. Sin `--dispositivo` se usa CUDA si está
 disponible; `--sin-fp16` desactiva la media precisión.
 
+La primera inferencia de un proceso es lenta (inicialización de los modelos y de la GPU).
+La CLI calienta los modelos antes de analizar y muestra ese tiempo aparte; los tiempos por
+etapa que imprime son los de una ejecución ya caliente.
+
 ## Modelos: pruebas
 
 ```bash

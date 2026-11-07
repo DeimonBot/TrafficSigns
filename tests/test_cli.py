@@ -13,6 +13,7 @@ def test_cli_imprime_senales(tmp_path, capsys):
     out = capsys.readouterr().out
     assert "#1 PARE [reglamentaria] reconocida conf 0.97" in out
     assert "Resumen:" in out and "total=" in out
+    assert out.index("Calentamiento (ms, no incluido en los tiempos): deteccion=") < out.index("#1")
 
 
 def test_cli_archivo_inexistente(capsys):
@@ -34,7 +35,7 @@ def test_cli_pasa_dispositivo(tmp_path):
 
     def construir(c):
         recibido["c"] = c
-        return pipeline_falso([], [])
+        return pipeline_falso([], [Prediccion("Stop", 0.9)])
 
     main([str(ruta), "--dispositivo", "cpu", "--sin-fp16"], construir=construir)
     assert (recibido["c"].dispositivo, recibido["c"].fp16) == ("cpu", False)

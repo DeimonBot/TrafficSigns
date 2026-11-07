@@ -5,11 +5,10 @@ from dataclasses import dataclass
 
 from PIL import Image
 
-from roadvision.catalog import Catalogo, EntradaCatalogo
+from roadvision.catalog import ID_VELOCIDAD_NO_VERIFICADA, Catalogo, EntradaCatalogo
 from roadvision.config import Umbrales
 from roadvision.contracts import Categoria, Estado, Fuente, Prediccion, Respaldo
 
-ID_VELOCIDAD_NO_VERIFICADA = "velocidad_no_verificada"
 _ORDEN_CATEGORIAS = (Categoria.REGLAMENTARIA, Categoria.PREVENTIVA, Categoria.INFORMATIVA)
 
 
@@ -94,12 +93,15 @@ class Decisor:
     ) -> None:
         cat = self._catalogo
         senales = cat.con_clip()
+        textos_categoria = [cat.categorias[c].clip for c in _ORDEN_CATEGORIAS]
+        # Etapa 1: señales del catálogo contra descripciones de categoría y "otro".
         filas = self._respaldo.puntuar(
-        	[recortes[i] for i in indices], [s.clip for s in senales])
+            [recortes[i] for i in indices],
+            [s.clip for s in senales] + textos_categoria + [cat.clip_otro])
         pendientes: list[int] = []
         for i, fila in zip(indices, filas):
             k, p = _mejor(fila)
-            if p >= umbrales.clip_senal:
+            if k < len(senales) and p >= umbrales.clip_senal:
                 s = senales[k]
                 resultado[i] = Decision(Estado.APROXIMADA, Fuente.CLIP, s.id, s.categoria, p)
             else:
@@ -107,7 +109,8 @@ class Decisor:
         if not pendientes:
             return
 
-        textos = [cat.categorias[c].clip for c in _ORDEN_CATEGORIAS] + [cat.clip_otro]
+        # Etapa 2: solo categoría, o rechazo.
+        textos = textos_categoria + [cat.clip_otro]
         filas = self._respaldo.puntuar([recortes[i] for i in pendientes], textos)
         for i, fila in zip(pendientes, filas):
             k, p = _mejor(fila)

@@ -74,7 +74,7 @@ def test_lote_agrupa_llamadas():
     decisor.decidir([recorte(1), recorte(2), recorte(3)],
                     [Prediccion("Stop", 0.97), Prediccion("Speed limit (30km/h)", 0.93),
                      Prediccion("Priority road", 0.99)], U)
-    assert respaldo.llamadas == [(1, 4), (1, 5)]
+    assert respaldo.llamadas == [(1, 4), (1, 9)]
 
 
 def test_umbral_gtsrb_por_llamada():
@@ -82,3 +82,17 @@ def test_umbral_gtsrb_por_llamada():
     p = [Prediccion("Stop", 0.85)]
     assert decisor.decidir([recorte(1)], p, Umbrales(gtsrb=0.80))[0].estado == Estado.RECONOCIDA
     assert decisor.decidir([recorte(1)], p, Umbrales(gtsrb=0.90))[0].estado == Estado.NO_RECONOCIDA
+
+
+def test_categoria_gana_a_senal_en_etapa_1():
+    decisor, respaldo = armar({1: {"resalto": 3, "cat-prev": 6}})
+    [d] = decisor.decidir([recorte(1)], [Prediccion("Priority road", 0.99)], U)
+    assert (d.estado, d.fuente, d.id_catalogo, d.categoria) == (
+        Estado.SOLO_CATEGORIA, Fuente.CLIP, None, Categoria.PREVENTIVA)
+    assert respaldo.llamadas == [(1, 9), (1, 4)]
+
+
+def test_otro_rechaza_en_etapa_1():
+    decisor, _ = armar({1: {"resalto": 3, "otro": 6}})
+    [d] = decisor.decidir([recorte(1)], [Prediccion("Priority road", 0.99)], U)
+    assert d == Decision(Estado.NO_RECONOCIDA, Fuente.NINGUNA, None, None, 0.0)

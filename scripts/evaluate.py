@@ -41,6 +41,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     dispositivo = elegir_dispositivo(args.dispositivo, fp16=not args.sin_fp16)
     clasificador = ClasificadorGtsrb(Config().modelo_clasificador, dispositivo)
+    clasificador.clasificar([Image.new("RGB", (64, 64))])  # calentamiento, no cuenta
     reporte = evaluar_clasificador(clasificador, _muestras(args.limite))
 
     print(f"n: {reporte.n}")
