@@ -26,6 +26,7 @@ gtsrb_sin_equivalente:
   - "No vehicles"
   - "Veh > 3.5 tons prohibited"
   - "General caution"
+  - "Bumpy road"
   - "Beware of ice/snow"
   - "End speed + passing limits"
   - "Turn right ahead"
@@ -171,8 +172,7 @@ senales:
   - id: resalto
     nombre: "Resalto o reductor de velocidad"
     categoria: preventiva
-    significado: "Reduzca la velocidad: hay un resalto o superficie irregular adelante."
-    gtsrb: ["Bumpy road"]
+    significado: "Reduzca la velocidad: hay un resalto adelante."
     clip: "a yellow diamond road sign with a speed bump symbol"
   - id: via_resbaladiza
     nombre: "Vía resbaladiza"

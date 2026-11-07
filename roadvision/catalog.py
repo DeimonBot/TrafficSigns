@@ -70,13 +70,21 @@ def _categoria(valor: str, contexto: str) -> Categoria:
 
 
 def cargar_catalogo(ruta: Path) -> Catalogo:
-    datos = yaml.safe_load(Path(ruta).read_text(encoding="utf-8"))
+    try:
+        datos = yaml.safe_load(Path(ruta).read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, yaml.YAMLError) as exc:
+        raise ErrorCatalogo(f"No se pudo leer el catálogo: {exc}") from exc
     if not isinstance(datos, dict):
         raise ErrorCatalogo("El catálogo debe ser un mapa YAML")
 
     categorias: dict[Categoria, InfoCategoria] = {}
-    for clave, info in _requerido(datos, "categorias", "el catálogo").items():
+    crudas = _requerido(datos, "categorias", "el catálogo")
+    if not isinstance(crudas, dict):
+        raise ErrorCatalogo("'categorias' debe ser un mapa")
+    for clave, info in crudas.items():
         cat = _categoria(clave, "'categorias'")
+        if not isinstance(info, dict):
+            raise ErrorCatalogo(f"La categoría '{clave}' debe ser un mapa")
         categorias[cat] = InfoCategoria(
             nombre=_requerido(info, "nombre", f"categoría {clave}"),
             significado=_requerido(info, "significado", f"categoría {clave}"),
@@ -88,11 +96,19 @@ def cargar_catalogo(ruta: Path) -> Catalogo:
 
     entradas: dict[str, EntradaCatalogo] = {}
     dueno: dict[str, str] = {}
-    for crudo in _requerido(datos, "senales", "el catálogo"):
+    lista = _requerido(datos, "senales", "el catálogo")
+    if not isinstance(lista, list):
+        raise ErrorCatalogo("'senales' debe ser una lista")
+    for crudo in lista:
+        if not isinstance(crudo, dict):
+            raise ErrorCatalogo("Cada elemento de 'senales' debe ser un mapa")
         id_ = _requerido(crudo, "id", "una señal")
         if id_ in entradas:
             raise ErrorCatalogo(f"Id repetido: {id_}")
-        gtsrb = tuple(crudo.get("gtsrb") or ())
+        gtsrb = crudo.get("gtsrb") or []
+        if not isinstance(gtsrb, list) or not all(isinstance(g, str) for g in gtsrb):
+            raise ErrorCatalogo(f"'gtsrb' de '{id_}' debe ser una lista de textos")
+        gtsrb = tuple(gtsrb)
         for etiqueta in gtsrb:
             if etiqueta in dueno:
                 raise ErrorCatalogo(
@@ -108,7 +124,10 @@ def cargar_catalogo(ruta: Path) -> Catalogo:
             velocidad_kmh=crudo.get("velocidad_kmh"),
         )
 
-    sin_equivalente = frozenset(datos.get("gtsrb_sin_equivalente") or ())
+    crudas_sin = datos.get("gtsrb_sin_equivalente") or []
+    if not isinstance(crudas_sin, list) or not all(isinstance(g, str) for g in crudas_sin):
+        raise ErrorCatalogo("'gtsrb_sin_equivalente' debe ser una lista de textos")
+    sin_equivalente = frozenset(crudas_sin)
     solapadas = sin_equivalente & set(dueno)
     if solapadas:
         raise ErrorCatalogo(

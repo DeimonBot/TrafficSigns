@@ -105,3 +105,46 @@ def test_catalogo_de_prueba_carga():
         "velocidad_30", "velocidad_50", "velocidad_60", "velocidad_40", "resalto"]
     assert cat.por_etiqueta_gtsrb("Priority road") is None
     assert etiquetas_sin_cubrir(cat, ["Stop", "Priority road", "Yield"]) == ["Yield"]
+
+
+def test_rechaza_gtsrb_escalar(tmp_path):
+    d = _cargar_yaml()
+    d["senales"][0]["gtsrb"] = "Stop"
+    with pytest.raises(ErrorCatalogo):
+        cargar_catalogo(_escribir(tmp_path, d))
+
+
+def test_rechaza_senal_que_no_es_mapa(tmp_path):
+    d = _cargar_yaml()
+    d["senales"].append("pare")
+    with pytest.raises(ErrorCatalogo):
+        cargar_catalogo(_escribir(tmp_path, d))
+
+
+def test_rechaza_categorias_mal_formadas(tmp_path):
+    d = _cargar_yaml()
+    d["categorias"]["preventiva"] = "texto"
+    with pytest.raises(ErrorCatalogo):
+        cargar_catalogo(_escribir(tmp_path, d))
+    d["categorias"] = ["reglamentaria"]
+    with pytest.raises(ErrorCatalogo):
+        cargar_catalogo(_escribir(tmp_path, d))
+
+
+def test_rechaza_yaml_invalido(tmp_path):
+    ruta = tmp_path / "malo.yaml"
+    ruta.write_text("senales: [a: b: c\n  - : :", "utf-8")
+    with pytest.raises(ErrorCatalogo):
+        cargar_catalogo(ruta)
+
+
+def test_rechaza_archivo_inexistente(tmp_path):
+    with pytest.raises(ErrorCatalogo):
+        cargar_catalogo(tmp_path / "no_existe.yaml")
+
+
+def test_resalto_real_es_solo_clip():
+    cat = cargar_catalogo(Config().ruta_catalogo)
+    assert cat.por_etiqueta_gtsrb("Bumpy road") is None
+    assert "Bumpy road" in cat.gtsrb_sin_equivalente
+    assert cat.entradas["resalto"].clip
