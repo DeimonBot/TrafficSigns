@@ -9,6 +9,17 @@ from roadvision.pipeline import construir_pipeline
 
 st.set_page_config(page_title="RoadVision", page_icon="🚦", layout="wide")
 
+st.markdown(
+    """
+    <style>
+    [data-testid="stSidebar"] { background-color: #444444; }
+    [data-testid="stSidebar"] * { color: #EAF2FA; }
+    h1 { color: #F2B800; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 COLORES = {
     Categoria.REGLAMENTARIA: (220, 40, 40),   # rojo
     Categoria.PREVENTIVA: (240, 190, 0),      # amarillo
@@ -22,6 +33,27 @@ ETIQUETA_ESTADO = {
     Estado.SOLO_CATEGORIA: "Solo categoría",
     Estado.NO_RECONOCIDA: "No reconocida",
 }
+
+COLOR_ESTADO = {
+    Estado.RECONOCIDA: "#2E9E5B",      # verde
+    Estado.APROXIMADA: "#E67E22",      # naranja
+    Estado.SOLO_CATEGORIA: "#8E5BD9",  # morado
+    Estado.NO_RECONOCIDA: "#828282",   # gris
+}
+
+
+def a_hex(rgb):
+    return "#%02x%02x%02x" % rgb
+
+
+def etiqueta(texto, color_hex):
+    r, g, b = (int(color_hex[i:i + 2], 16) for i in (1, 3, 5))
+    texto_color = "#222222" if (r * 299 + g * 587 + b * 114) / 1000 > 160 else "#FFFFFF"
+    return (
+        f"<span style='background:{color_hex};color:{texto_color};"
+        "padding:2px 10px;border-radius:12px;font-size:0.8rem;"
+        f"font-weight:600;margin-right:6px'>{texto}</span>"
+    )
 
 
 @st.cache_resource(show_spinner="Cargando modelos (solo la primera vez)...")
@@ -46,8 +78,10 @@ def dibujar_cajas(imagen, senales):
         color = color_de(s)
         dib.rectangle(s.caja, outline=color, width=grosor)
         x, y = s.caja[0], s.caja[1]
-        dib.rectangle((x, y, x + grosor * 8, y + grosor * 8), fill=color)
-        dib.text((x + 3, y), str(s.numero), fill=(255, 255, 255), font=fuente)
+        lado = grosor * 8
+        y_et = max(0, y - lado)          # la etiqueta va encima de la caja
+        dib.rectangle((x, y_et, x + lado, y_et + lado), fill=color)
+        dib.text((x + 3, y_et), str(s.numero), fill=(255, 255, 255), font=fuente)
     return img
 
 
@@ -94,26 +128,29 @@ if archivo:
             c1, c2 = st.columns([1, 5])
             c1.image(s.recorte, width=90)
             categoria = s.categoria.value if s.categoria else "sin categoría"
+            color_cat = color_de(s)
             c2.markdown(
-                f"**{s.numero}. {s.nombre}** · {categoria} · "
-                f"{ETIQUETA_ESTADO[s.estado]} · confianza {s.confianza:.0%}"
+                f"**{s.numero}. {s.nombre}**<br>"
+                + etiqueta(categoria, a_hex(color_cat))
+                + etiqueta(ETIQUETA_ESTADO[s.estado], COLOR_ESTADO[s.estado])
+                + f"<span style='opacity:0.8'>confianza {s.confianza:.0%}</span>",
+                unsafe_allow_html=True,
             )
             if s.significado:
                 c2.write(s.significado)
 
         st.subheader("Resumen")
-        st.write(f"**Total de señales:** {len(senales)}")
         por_categoria = {}
         for s in senales:
             clave = s.categoria.value if s.categoria else "sin categoría"
             por_categoria[clave] = por_categoria.get(clave, 0) + 1
-        st.write("**Por categoría:** " + ", ".join(
-            f"{k}: {v}" for k, v in por_categoria.items()))
 
-        distintas = {}
-        for s in senales:
-            if s.significado:
-                distintas[s.nombre] = s.significado
+        columnas = st.columns(len(por_categoria) + 1)
+        columnas[0].metric("Total de señales", len(senales))
+        for col, (nombre, cantidad) in zip(columnas[1:], por_categoria.items()):
+            col.metric(nombre.capitalize(), cantidad)
+
+        distintas = {s.nombre: s.significado for s in senales if s.significado}
         for nombre, significado in distintas.items():
             st.markdown(f"- **{nombre}**: {significado}")
 
