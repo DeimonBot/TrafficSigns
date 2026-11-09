@@ -1,13 +1,23 @@
 import base64
 import dataclasses
+import os
 from pathlib import Path
 
 import pandas as pd
 import streamlit as st
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
+from roadvision.capa_segura import construir_pipeline_seguro, modo_seguro_disponible
 from roadvision.config import Config
 from roadvision.contracts import Categoria, Estado
+from roadvision.dashboard.panel import render_panel
+from roadvision.metrics import (
+    analizar_medido,
+    calentar_medido,
+    escribir_csv,
+    registrar,
+    reporte_arranque,
+)
 from roadvision.pipeline import ETAPAS, construir_pipeline
 
 st.set_page_config(page_title="RoadVision", page_icon="🚦", layout="wide")
@@ -74,17 +84,45 @@ def etiqueta(texto, color_hex):
     )
 
 
+def _construir(config=None):
+    """Un solo pipeline GPU en el proceso (VRAM). ROADVISION_MODO: 'seguro' (por defecto si
+    está disponible) o 'clasico'. Devuelve (pipeline, modo, aviso)."""
+    modo = os.environ.get("ROADVISION_MODO", "seguro").strip().lower()
+    aviso = None
+    if modo != "clasico":
+        ok, motivo = modo_seguro_disponible()
+        if ok:
+            try:
+                return construir_pipeline_seguro(config), "seguro", None
+            except Exception as exc:  # noqa: BLE001 - se cae al clásico con aviso
+                import gc
+
+                import torch
+
+                gc.collect()  # libera lo cargado a medias antes de cargar el clásico
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+                aviso = f"No se pudo cargar el modo seguro ({exc}); se usa el modo clásico."
+        else:
+            aviso = f"Modo seguro no disponible ({motivo}); se usa el modo clásico."
+    return construir_pipeline(config), "clasico", aviso
+
+
 @st.cache_resource(show_spinner="Cargando modelos (solo la primera vez)...")
 def cargar_pipeline():
-    pipeline = construir_pipeline()
-    calentamiento = pipeline.calentar()
-    return pipeline, calentamiento
+    pipeline, modo, aviso = _construir()
+    # Calentamiento medido y marcado: se imprime y se guarda aparte, fuera de estadísticas.
+    calentamiento = calentar_medido(pipeline)
+    reporte_arranque(pipeline, calentamiento)
+    escribir_csv(calentamiento)
+    return pipeline, calentamiento, modo, aviso
 
 
 @st.cache_resource(show_spinner="Cargando modelos en CPU para comparar...")
 def cargar_pipeline_cpu():
+    # Mismo modo que el pipeline principal, en CPU (usa RAM, no VRAM).
     config = dataclasses.replace(Config(), dispositivo="cpu", fp16=False)
-    pipeline = construir_pipeline(config)
+    pipeline, _, _ = _construir(config)
     pipeline.calentar()
     return pipeline
 
@@ -137,7 +175,7 @@ def leyenda_colores():
 
 
 # ---------- Cargar modelos ----------
-pipeline, calentamiento = cargar_pipeline()
+pipeline, calentamiento, modo, aviso_modo = cargar_pipeline()
 base = pipeline.config.umbrales
 es_gpu = pipeline.dispositivo.nombre == "cuda"
 
@@ -166,6 +204,7 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
     st.write(pipeline.dispositivo.descripcion)
+    st.caption(f"Modo: {modo}")
 
 umbrales = dataclasses.replace(base, deteccion=umbral_det, gtsrb=umbral_cls)
 
@@ -178,17 +217,22 @@ st.markdown(
     "</div>",
     unsafe_allow_html=True,
 )
+if aviso_modo:
+    st.warning(aviso_modo)
 
 archivo = st.file_uploader("Foto de la vía", type=["jpg", "jpeg", "png"])
 
 if archivo:
     imagen = ImageOps.exif_transpose(Image.open(archivo)).convert("RGB")
 
-    # Se analiza solo cuando cambia la foto o los umbrales (no en cada clic)
+    # Se analiza (y se registra la métrica) solo cuando cambia la foto o los umbrales
+    # (no en cada clic): así no se escribe una fila de CSV por cada movimiento de slider.
     clave = (archivo.name, archivo.size, umbral_det, umbral_cls)
     if st.session_state.get("clave") != clave:
         with st.spinner("Analizando..."):
-            st.session_state["resultado"] = pipeline.analizar(imagen, umbrales)
+            resultado, metricas = analizar_medido(pipeline, imagen, umbrales)
+        registrar(metricas)
+        st.session_state["resultado"] = resultado
         st.session_state["clave"] = clave
     resultado = st.session_state["resultado"]
 
@@ -265,7 +309,7 @@ if archivo:
 
         st.subheader("Carga de modelos")
         nombres = {"detector": "Detector (OWLv2)", "clasificador": "Clasificador (ViT)",
-                   "respaldo": "Respaldo (CLIP)"}
+                   "respaldo": "Respaldo (CLIP)", "capa_segura": "Capa segura (SigLIP)"}
         st.dataframe(
             {
                 "Modelo": [nombres.get(k, k) for k in pipeline.carga],
@@ -276,6 +320,9 @@ if archivo:
         )
         if not es_gpu:
             st.caption("En CPU la VRAM es 0: no se usa memoria de la GPU.")
+
+        st.subheader("Uso del equipo (GPU, VRAM, CPU, RAM)")
+        render_panel(clave="app")
 
     # ----- Pestaña 4: CPU vs GPU -----
     with tab_comp:

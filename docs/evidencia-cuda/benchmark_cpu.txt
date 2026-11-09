@@ -1,0 +1,25 @@
+Midiendo: 6 imagen(es) x 2 repeticiones...
+          Tiempos por etapa (ms) - CPU / fp32 - sin calentamiento          
+┌───────────────────┬────┬────────┬────────┬────────────┬────────┬────────┐
+│ Etapa             │  n │  media │    p50 │        p95 │    mín │    máx │
+├───────────────────┼────┼────────┼────────┼────────────┼────────┼────────┤
+│ ms_total          │ 12 │ 4373.5 │ 4287.5 │ n/a (n<20) │ 3906.3 │ 5425.3 │
+│ ms_preproceso     │ 12 │    3.9 │    3.4 │ n/a (n<20) │    1.9 │    7.7 │
+│ ms_deteccion      │ 12 │ 3698.3 │ 3666.5 │ n/a (n<20) │ 3351.6 │ 4341.1 │
+│ ms_clasificacion* │ 12 │  298.5 │  222.4 │ n/a (n<20) │  112.2 │  886.6 │
+│ ms_respaldo*      │ 12 │  372.7 │  346.5 │ n/a (n<20) │   98.7 │  744.1 │
+└───────────────────┴────┴────────┴────────┴────────────┴────────┴────────┘
+* costo por imagen; incluye 0.0 ms si no hubo recortes.
+                                 Consumo                                  
+┌─────────────────────────────────────────────────┬──────────────────────┐
+│ Métrica                                         │                Valor │
+├─────────────────────────────────────────────────┼──────────────────────┤
+│ Imágenes/s (equivalente, 1000/mediana ms_total) │                 0.23 │
+│ GPU % pico (dispositivo)                        │ n/a (corrida en CPU) │
+│ VRAM pico (dispositivo)                         │ n/a (corrida en CPU) │
+│ VRAM pico torch (proceso)                       │                  n/d │
+│ Temperatura máx (dispositivo)                   │ n/a (corrida en CPU) │
+│ Potencia prom (dispositivo)                     │ n/a (corrida en CPU) │
+│ CPU % prom (proceso, 100 % = 1 núcleo)          │              587.1 % │
+│ RAM pico (proceso)                              │              2969 MB │
+└─────────────────────────────────────────────────┴──────────────────────┘

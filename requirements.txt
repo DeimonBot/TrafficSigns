@@ -5,3 +5,10 @@ pillow==13.0.0
 pyyaml==6.0.3
 pytest==9.2.0
 streamlit==1.67.0
+
+# métricas y dashboard
+psutil==7.2.2
+nvidia-ml-py==13.615.71
+pandas==3.1.1
+rich==15.0.0
+plotly==7.1.0
