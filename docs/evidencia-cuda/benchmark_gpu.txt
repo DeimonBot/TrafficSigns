@@ -1,0 +1,26 @@
+Midiendo: 6 imagen(es) x 25 repeticiones...
+Tiempos por etapa (ms) - NVIDIA GeForce RTX 3050 Laptop GPU / fp16 
+                        - sin calentamiento                        
+┌───────────────────┬─────┬───────┬───────┬───────┬───────┬───────┐
+│ Etapa             │   n │ media │   p50 │   p95 │   mín │   máx │
+├───────────────────┼─────┼───────┼───────┼───────┼───────┼───────┤
+│ ms_total          │ 150 │ 313.4 │ 307.7 │ 420.8 │ 191.3 │ 562.2 │
+│ ms_preproceso     │ 150 │   3.5 │   3.0 │   6.2 │   1.4 │   8.4 │
+│ ms_deteccion      │ 150 │ 234.4 │ 223.6 │ 305.3 │ 169.6 │ 453.6 │
+│ ms_clasificacion* │ 150 │  24.4 │  19.5 │  49.5 │  10.8 │  60.1 │
+│ ms_respaldo*      │ 150 │  51.0 │  61.9 │  87.0 │   0.0 │ 116.7 │
+└───────────────────┴─────┴───────┴───────┴───────┴───────┴───────┘
+* costo por imagen; incluye 0.0 ms si no hubo recortes.
+                           Consumo                           
+┌─────────────────────────────────────────────────┬─────────┐
+│ Métrica                                         │   Valor │
+├─────────────────────────────────────────────────┼─────────┤
+│ Imágenes/s (equivalente, 1000/mediana ms_total) │    3.25 │
+│ GPU % pico (dispositivo)                        │   100 % │
+│ VRAM pico (dispositivo)                         │ 3013 MB │
+│ VRAM pico torch (proceso)                       │  871 MB │
+│ Temperatura máx (dispositivo)                   │   89 °C │
+│ Potencia prom (dispositivo)                     │  42.5 W │
+│ CPU % prom (proceso, 100 % = 1 núcleo)          │ 580.4 % │
+│ RAM pico (proceso)                              │ 2467 MB │
+└─────────────────────────────────────────────────┴─────────┘
